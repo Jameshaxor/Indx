@@ -20,7 +20,7 @@ export default function DashboardPage() {
 
   useEffect(() => { load(); const i = setInterval(load, 60000); return () => clearInterval(i); }, [load]);
 
-  const name = user?.name?.split(' ')[0] || 'there';
+  const name = user?.displayName?.split(' ')[0] || user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
   const idx = mkt?.indices || [], stk = mkt?.stocks || [], sec = mkt?.sectors || [];
   const gainers = useMemo(() => stk.filter(s=>s.change>0).sort((a,b)=>b.change-a.change).slice(0,5), [stk]);
   const losers = useMemo(() => stk.filter(s=>s.change<0).sort((a,b)=>a.change-b.change).slice(0,5), [stk]);
