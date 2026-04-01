@@ -1,97 +1,92 @@
-// app/api/market/route.js
+import { stockMeta, indexSymbols } from '@/lib/data';
+import { NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
+
+async function yf(sym) {
+  try {
+    const res = await fetch(
+      `https://yahoo-finance15.p.rapidapi.com/api/yahoo/quote/${sym}`,
+      {
+        headers: {
+          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+          'X-RapidAPI-Host': 'yahoo-finance15.p.rapidapi.com',
+        },
+        next: { revalidate: 60 }
+      }
+    );
+
+    if (!res.ok) return null;
+    const data = await res.json();
+
+    return {
+      price: Math.round(data.price * 100) / 100,
+      change: Math.round(data.changePercent * 100) / 100,
+      prevClose: Math.round(data.previousClose * 100) / 100,
+      dayHigh: data.dayHigh,
+      dayLow: data.dayLow,
+      history: []
+    };
+
+  } catch {
+    return null;
+  }
+}
+
 export async function GET() {
   try {
-    // 1. Fetch Nifty 50 data from Yahoo Finance
-    const niftyRes = await fetch(
-      'https://yahoo-finance15.p.rapidapi.com/api/yahoo/quote/^NSEI',
-      {
-        headers: {
-          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-          'X-RapidAPI-Host': 'yahoo-finance15.p.rapidapi.com',
-        },
-      }
-    );
-    const niftyData = await niftyRes.json();
-    
-    // 2. Fetch Sensex
-    const sensexRes = await fetch(
-      'https://yahoo-finance15.p.rapidapi.com/api/yahoo/quote/^BSESN',
-      {
-        headers: {
-          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-          'X-RapidAPI-Host': 'yahoo-finance15.p.rapidapi.com',
-        },
-      }
-    );
-    const sensexData = await sensexRes.json();
 
-    // 3. Fetch Nifty Bank
-    const bankRes = await fetch(
-      'https://yahoo-finance15.p.rapidapi.com/api/yahoo/quote/^NSEBANK',
-      {
-        headers: {
-          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-          'X-RapidAPI-Host': 'yahoo-finance15.p.rapidapi.com',
-        },
-      }
-    );
-    const bankData = await bankRes.json();
-
-    // 4. Fetch Nifty IT
-    const itRes = await fetch(
-      'https://yahoo-finance15.p.rapidapi.com/api/yahoo/quote/^NSEIT',
-      {
-        headers: {
-          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-          'X-RapidAPI-Host': 'yahoo-finance15.p.rapidapi.com',
-        },
-      }
-    );
-    const itData = await itRes.json();
-
-    // Helper to format numbers
-    const formatNum = (n) => n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
-
-    return Response.json({
-      nifty50: {
-        value: formatNum(niftyData.price),
-        change: niftyData.change,
-        changePercent: niftyData.changePercent,
-        prevClose: formatNum(niftyData.previousClose),
-      },
-      sensex: {
-        value: formatNum(sensexData.price),
-        change: sensexData.change,
-        changePercent: sensexData.changePercent,
-        prevClose: formatNum(sensexData.previousClose),
-      },
-      bank: {
-        value: formatNum(bankData.price),
-        change: bankData.change,
-        changePercent: bankData.changePercent,
-        prevClose: formatNum(bankData.previousClose),
-      },
-      it: {
-        value: formatNum(itData.price),
-        change: itData.change,
-        changePercent: itData.changePercent,
-        prevClose: formatNum(itData.previousClose),
-      },
-      news: [
-        { title: "RBI keeps repo rate unchanged at 6.5%", source: "Bloomberg", time: "2h ago" },
-        { title: "Tata Motors rallies 4% on strong JLR sales", source: "Moneycontrol", time: "4h ago" },
-        { title: "Nifty IT index hits record high", source: "ET Markets", time: "6h ago" },
-      ]
+    // ✅ Run ALL requests IN PARALLEL (not one after another)
+    const indexPromises = indexSymbols.map(async i => {
+      const d = await yf(i.symbol);
+      return d ? { ...d, displayName: i.name } : null;
     });
-  } catch (error) {
-    console.error("Market API Error:", error);
-    // Fallback mock data if API fails
-    return Response.json({
-      nifty50: { value: "22,679.40", change: "-2499.25", changePercent: "-9.93", prevClose: "25,178.65" },
-      sensex: { value: "73,134.32", change: "-8152.87", changePercent: "-10.03", prevClose: "81,287.19" },
-      bank: { value: "51,448.65", change: "-9080.35", changePercent: "-15.00", prevClose: "60,529.00" },
-      it: { value: "11,008.05", change: "0.00", changePercent: "+0.00", prevClose: "11,008.05" },
-      news: []
+
+    const stockPromises = Object.entries(stockMeta).map(async ([yahoo, meta]) => {
+      const d = await yf(yahoo);
+      return d ? { sym: meta.sym, name: meta.name, sector: meta.sector, color: meta.color, ...d } : null;
     });
+
+    const [indices, stocks] = await Promise.all([
+      Promise.all(indexPromises),
+      Promise.all(stockPromises)
+    ]);
+
+    // Filter out failed requests
+    const idx = indices.filter(Boolean);
+    const stk = stocks.filter(Boolean);
+
+    // Calculate sector averages
+    const secMap = {};
+    stk.forEach(s => {
+      if (!secMap[s.sector]) secMap[s.sector] = [];
+      secMap[s.sector].push(s.change);
+    });
+    const sectors = Object.entries(secMap).map(([n,c]) => ({
+      name:n,
+      change: Math.round((c.reduce((a,v)=>a+v,0)/c.length)*100)/100
+    })).sort((a,b)=>Math.abs(b.change)-Math.abs(a.change));
+
+    const marketState = idx[0]?.state || 'CLOSED';
+
+    return NextResponse.json({
+      indices: idx,
+      stocks: stk,
+      sectors,
+      marketState,
+      lastUpdated: new Date().toISOString()
+    }, {
+      headers:{'Cache-Control':'public, s-maxage=60, stale-while-revalidate=120'}
+    });
+
+  } catch (e) {
+    console.error("Market API Error:", e);
+    return NextResponse.json({
+      indices: [],
+      stocks: [],
+      sectors: [],
+      marketState: 'CLOSED',
+      error: e.message
+    }, { status: 500 });
   }
 }
