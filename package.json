@@ -14,5 +14,10 @@
     "firebase": "^11.0.0",
     "@google/generative-ai": "^0.21.0",
     "cheerio": "^1.0.0"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49"
   }
 }
