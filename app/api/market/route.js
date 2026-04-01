@@ -5,88 +5,72 @@ export const dynamic = 'force-dynamic';
 
 async function yf(sym) {
   try {
-    const res = await fetch(
-      `https://yahoo-finance15.p.rapidapi.com/api/yahoo/quote/${sym}`,
-      {
-        headers: {
-          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-          'X-RapidAPI-Host': 'yahoo-finance15.p.rapidapi.com',
-        },
-        next: { revalidate: 60 }
-      }
+    const r = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1mo`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
     );
+    if (!r.ok) return null;
+    const j = await r.json(), m = j.chart?.result?.[0]?.meta;
+    if (!m) return null;
 
-    if (!res.ok) return null;
-    const data = await res.json();
+    const closes = (j.chart.result[0].indicators?.quote?.[0]?.close || []).filter(c => c != null);
+    const price = m.regularMarketPrice;
+
+    // FIX: Use closes array for yesterday's close (NOT chartPreviousClose which is 1 month ago!)
+    let prev;
+    const isOpen = m.marketState === 'REGULAR';
+    if (isOpen && closes.length >= 1) {
+      prev = closes[closes.length - 1]; // Market open: last close = yesterday
+    } else if (closes.length >= 2) {
+      prev = closes[closes.length - 2]; // Market closed: second-to-last = yesterday
+    } else {
+      prev = m.previousClose || price;
+    }
+
+    const change = Math.round(((price - prev) / prev) * 10000) / 100;
 
     return {
-      price: Math.round(data.price * 100) / 100,
-      change: Math.round(data.changePercent * 100) / 100,
-      prevClose: Math.round(data.previousClose * 100) / 100,
-      dayHigh: data.dayHigh,
-      dayLow: data.dayLow,
-      history: []
+      price: Math.round(price * 100) / 100,
+      change,
+      prevClose: Math.round(prev * 100) / 100,
+      dayHigh: m.regularMarketDayHigh,
+      dayLow: m.regularMarketDayLow,
+      vol: m.regularMarketVolume,
+      history: closes.slice(-30),
+      state: m.marketState
     };
-
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 export async function GET() {
   try {
-
-    // ✅ Run ALL requests IN PARALLEL (not one after another)
-    const indexPromises = indexSymbols.map(async i => {
+    const idxP = indexSymbols.map(async i => {
       const d = await yf(i.symbol);
       return d ? { ...d, displayName: i.name } : null;
     });
-
-    const stockPromises = Object.entries(stockMeta).map(async ([yahoo, meta]) => {
+    const stkP = Object.entries(stockMeta).map(async ([yahoo, meta]) => {
       const d = await yf(yahoo);
       return d ? { sym: meta.sym, name: meta.name, sector: meta.sector, color: meta.color, ...d } : null;
     });
 
-    const [indices, stocks] = await Promise.all([
-      Promise.all(indexPromises),
-      Promise.all(stockPromises)
-    ]);
+    const [indices, stocks] = await Promise.all([Promise.all(idxP), Promise.all(stkP)]);
+    const idx = indices.filter(Boolean), stk = stocks.filter(Boolean);
 
-    // Filter out failed requests
-    const idx = indices.filter(Boolean);
-    const stk = stocks.filter(Boolean);
-
-    // Calculate sector averages
     const secMap = {};
-    stk.forEach(s => {
-      if (!secMap[s.sector]) secMap[s.sector] = [];
-      secMap[s.sector].push(s.change);
-    });
-    const sectors = Object.entries(secMap).map(([n,c]) => ({
-      name:n,
-      change: Math.round((c.reduce((a,v)=>a+v,0)/c.length)*100)/100
-    })).sort((a,b)=>Math.abs(b.change)-Math.abs(a.change));
-
-    const marketState = idx[0]?.state || 'CLOSED';
+    stk.forEach(s => { if (!secMap[s.sector]) secMap[s.sector] = []; secMap[s.sector].push(s.change); });
+    const sectors = Object.entries(secMap).map(([n, c]) => ({
+      name: n,
+      change: Math.round((c.reduce((a, v) => a + v, 0) / c.length) * 100) / 100
+    })).sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
 
     return NextResponse.json({
-      indices: idx,
-      stocks: stk,
-      sectors,
-      marketState,
+      indices: idx, stocks: stk, sectors,
+      marketState: idx[0]?.state || 'CLOSED',
       lastUpdated: new Date().toISOString()
     }, {
-      headers:{'Cache-Control':'public, s-maxage=60, stale-while-revalidate=120'}
+      headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' }
     });
-
   } catch (e) {
-    console.error("Market API Error:", e);
-    return NextResponse.json({
-      indices: [],
-      stocks: [],
-      sectors: [],
-      marketState: 'CLOSED',
-      error: e.message
-    }, { status: 500 });
+    return NextResponse.json({ indices: [], stocks: [], sectors: [], marketState: 'CLOSED', error: e.message }, { status: 500 });
   }
 }
