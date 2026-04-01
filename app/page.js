@@ -25,6 +25,7 @@ export default function LandingPage() {
   const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState(-1);
+  const [mobileMenu, setMobileMenu] = useState(false);
 
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 40);
@@ -53,27 +54,50 @@ export default function LandingPage() {
 
   return (
     <>
+      {/* NAV */}
       <nav className={`site-nav ${scrolled?'scrolled':''}`}>
-        <div className="container" style={{display:'flex',alignItems:'center',justifyContent:'space-between',height:'100%',maxWidth:1120,margin:'0 auto',padding:'0 24px'}}>
-          <Link href="/" style={{display:'flex',alignItems:'center',gap:8,fontWeight:800,fontSize:'1.05rem',letterSpacing:'-0.03em'}}>
+        <div className="lp-container" style={{display:'flex',alignItems:'center',justifyContent:'space-between',height:'100%'}}>
+          <Link href="/" style={{display:'flex',alignItems:'center',gap:8,fontWeight:800,fontSize:'1.05rem',letterSpacing:'-0.03em',textDecoration:'none',color:'var(--t1)'}}>
             <div className="nav-mark">IX</div>Indx
           </Link>
-          <div className="hide-m" style={{display:'flex',gap:24}}>
-            <a href="#features" style={{fontSize:13,color:'var(--t2)',fontWeight:500,transition:'color .15s'}} onMouseEnter={e=>e.target.style.color='var(--t0)'} onMouseLeave={e=>e.target.style.color='var(--t2)'}>Features</a>
-            <a href="#pricing" style={{fontSize:13,color:'var(--t2)',fontWeight:500,transition:'color .15s'}} onMouseEnter={e=>e.target.style.color='var(--t0)'} onMouseLeave={e=>e.target.style.color='var(--t2)'}>Pricing</a>
-            <a href="#faq" style={{fontSize:13,color:'var(--t2)',fontWeight:500,transition:'color .15s'}} onMouseEnter={e=>e.target.style.color='var(--t0)'} onMouseLeave={e=>e.target.style.color='var(--t2)'}>FAQ</a>
+
+          {/* Desktop nav links */}
+          <div className="lp-desktop-only" style={{display:'flex',gap:24}}>
+            <a href="#features" className="lp-nav-link">Features</a>
+            <a href="#pricing" className="lp-nav-link">Pricing</a>
+            <a href="#faq" className="lp-nav-link">FAQ</a>
           </div>
-          <div style={{display:'flex',gap:8}}>
-            {!user && <Link href="/auth" className="btn btn-g hide-m">Sign in</Link>}
+
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            {!user && <Link href="/auth" className="btn btn-g lp-desktop-only">Sign in</Link>}
             <Link href={cta} className="btn btn-p btn-sm">{ctaT} →</Link>
+            {/* Mobile hamburger */}
+            <button className="lp-mobile-only" onClick={()=>setMobileMenu(!mobileMenu)} style={{
+              background:'none',border:'none',fontSize:22,cursor:'pointer',color:'var(--t1)',padding:'4px 8px'
+            }}>{mobileMenu ? '✕' : '☰'}</button>
           </div>
         </div>
+
+        {/* Mobile dropdown menu */}
+        {mobileMenu && (
+          <div className="lp-mobile-only" style={{
+            position:'absolute',top:'100%',left:0,right:0,background:'var(--bg1)',
+            borderBottom:'1px solid var(--b0)',padding:'16px 24px',
+            display:'flex',flexDirection:'column',gap:12,zIndex:100
+          }}>
+            <a href="#features" onClick={()=>setMobileMenu(false)} className="lp-nav-link">Features</a>
+            <a href="#pricing" onClick={()=>setMobileMenu(false)} className="lp-nav-link">Pricing</a>
+            <a href="#faq" onClick={()=>setMobileMenu(false)} className="lp-nav-link">FAQ</a>
+            {!user && <Link href="/auth" onClick={()=>setMobileMenu(false)} className="btn btn-g" style={{textAlign:'center'}}>Sign in</Link>}
+          </div>
+        )}
       </nav>
 
-      <section style={{padding:'140px 0 80px',position:'relative',overflow:'hidden'}}>
+      {/* HERO */}
+      <section className="lp-section" style={{paddingTop:140,paddingBottom:80,position:'relative',overflow:'hidden'}}>
         <div className="orb" style={{width:500,height:500,background:'rgba(124,92,231,.08)',top:-100,left:'20%'}} />
         <div className="orb" style={{width:400,height:400,background:'rgba(167,139,250,.05)',top:200,right:'10%',animationDelay:'-7s'}} />
-        <div className="container" style={{maxWidth:1120,margin:'0 auto',padding:'0 24px',position:'relative',zIndex:1}}>
+        <div className="lp-container" style={{position:'relative',zIndex:1}}>
           <div className="reveal" style={{marginBottom:20}}>
             <span className="badge bg-purple" style={{padding:'5px 12px',fontSize:12,borderRadius:100,border:'1px solid rgba(124,92,231,.12)'}}>Live NSE/BSE data · Gemini AI</span>
           </div>
@@ -87,22 +111,29 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* STATS BAR */}
       <section style={{padding:'36px 0',borderTop:'1px solid var(--b0)',borderBottom:'1px solid var(--b0)'}}>
-        <div className="container" style={{maxWidth:1120,margin:'0 auto',padding:'0 24px',display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:24,textAlign:'center'}}>
-          {[['25+','Live NSE stocks'],['10','MF schemes tracked'],['~60s','Data refresh rate'],['Free','Gemini AI built-in']].map(([n,l],i)=>(
-            <div key={i} className={`reveal rd${i+1}`}><div style={{fontSize:'1.5rem',fontWeight:800,fontFamily:'var(--mono)',letterSpacing:'-0.03em'}}>{n}</div><div className="caption" style={{marginTop:4}}>{l}</div></div>
-          ))}
+        <div className="lp-container">
+          <div className="lp-stats-grid">
+            {[['25+','Live NSE stocks'],['10','MF schemes tracked'],['~60s','Data refresh rate'],['Free','Gemini AI built-in']].map(([n,l],i)=>(
+              <div key={i} className={`reveal rd${i+1}`} style={{textAlign:'center'}}>
+                <div style={{fontSize:'1.5rem',fontWeight:800,fontFamily:'var(--mono)',letterSpacing:'-0.03em'}}>{n}</div>
+                <div className="caption" style={{marginTop:4}}>{l}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="section" id="features" style={{padding:'100px 0'}}>
-        <div className="container" style={{maxWidth:1120,margin:'0 auto',padding:'0 24px'}}>
+      {/* FEATURES */}
+      <section className="lp-section" id="features" style={{padding:'80px 0'}}>
+        <div className="lp-container">
           <div className="reveal" style={{textAlign:'center',marginBottom:48}}>
             <div className="overline" style={{marginBottom:10}}>Features</div>
             <h2 className="h-l">Built for how Indians actually invest.</h2>
             <p className="body-l" style={{maxWidth:460,margin:'14px auto 0'}}>Not a generic finance app. Every feature uses real Indian market data and tax rules.</p>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))',gap:12}}>
+          <div className="lp-features-grid">
             {FEATURES.map((f,i)=>(
               <div key={i} className={`card card-glow reveal rd${Math.min(i+1,5)}`} style={{padding:24,transition:'border-color .25s,box-shadow .25s,transform .25s',cursor:'default'}} onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--b2)';e.currentTarget.style.boxShadow='0 4px 24px rgba(0,0,0,.3)'}} onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--b0)';e.currentTarget.style.boxShadow='none'}}>
                 <div style={{width:40,height:40,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.2rem',background:'var(--accentM)',border:'1px solid rgba(124,92,231,.08)',marginBottom:16}}>{f.icon}</div>
@@ -114,13 +145,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="pricing" style={{padding:'100px 0',background:'var(--bg1)'}}>
-        <div className="container" style={{maxWidth:900,margin:'0 auto',padding:'0 24px'}}>
+      {/* PRICING */}
+      <section id="pricing" style={{padding:'80px 0',background:'var(--bg1)'}}>
+        <div className="lp-container">
           <div className="reveal" style={{textAlign:'center',marginBottom:40}}>
             <div className="overline" style={{marginBottom:10}}>Pricing</div>
             <h2 className="h-l">Simple pricing. Start free.</h2>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:12}}>
+          <div className="lp-pricing-grid">
             {[
               {plan:'Free',price:'₹0',sub:'forever',features:['5 watchlist stocks','Market overview','SIP calculator','Basic screener','5 news articles']},
               {plan:'Pro',price:'₹499',sub:'/month',featured:true,features:['Unlimited watchlist','AI insights (Gemini)','Portfolio analytics','Tax optimizer','Price alerts','Full news feed','Broker integration']},
@@ -130,7 +162,7 @@ export default function LandingPage() {
                 {p.featured && <div style={{position:'absolute',top:-10,left:'50%',transform:'translateX(-50%)',background:'var(--accent)',color:'#fff',padding:'2px 12px',borderRadius:100,fontSize:11,fontWeight:650}}>Recommended</div>}
                 <div className="overline" style={{color:'var(--t2)',marginBottom:2}}>{p.plan}</div>
                 <div style={{fontSize:'2rem',fontWeight:800,fontFamily:'var(--mono)',letterSpacing:'-0.04em'}}>{p.price}<span style={{fontSize:14,fontWeight:400,color:'var(--t3)'}}>{p.sub}</span></div>
-                <ul style={{listStyle:'none',margin:'20px 0',flex:1}}>
+                <ul style={{listStyle:'none',margin:'20px 0',flex:1,padding:0}}>
                   {p.features.map((f,j)=><li key={j} style={{padding:'5px 0',fontSize:13,color:'var(--t2)',display:'flex',alignItems:'center',gap:8}}><span style={{color:'var(--green)',fontSize:11,fontWeight:700}}>✓</span>{f}</li>)}
                 </ul>
                 <Link href={cta} className={`btn btn-block ${p.featured?'btn-p':'btn-s'}`}>{p.plan==='Free'?'Get Started':'Start Trial'}</Link>
@@ -140,8 +172,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="faq" style={{padding:'100px 0'}}>
-        <div className="container" style={{maxWidth:640,margin:'0 auto',padding:'0 24px'}}>
+      {/* FAQ */}
+      <section id="faq" style={{padding:'80px 0'}}>
+        <div className="lp-container" style={{maxWidth:640}}>
           <div className="reveal" style={{textAlign:'center',marginBottom:40}}>
             <div className="overline" style={{marginBottom:10}}>FAQ</div>
             <h2 className="h-l">Common questions.</h2>
@@ -160,9 +193,10 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* CTA */}
       <section style={{padding:'80px 0'}}>
-        <div className="container" style={{maxWidth:1120,margin:'0 auto',padding:'0 24px'}}>
-          <div className="reveal" style={{background:'var(--bg2)',border:'1px solid rgba(124,92,231,.12)',borderRadius:'var(--rxl)',padding:'56px 36px',textAlign:'center',position:'relative',overflow:'hidden'}}>
+        <div className="lp-container">
+          <div className="reveal" style={{background:'var(--bg2)',border:'1px solid rgba(124,92,231,.12)',borderRadius:'var(--rxl)',padding:'56px 24px',textAlign:'center',position:'relative',overflow:'hidden'}}>
             <div style={{position:'absolute',top:'-40%',left:'50%',transform:'translateX(-50%)',width:500,height:500,background:'radial-gradient(circle,rgba(124,92,231,.08),transparent 60%)',pointerEvents:'none'}} />
             <h2 className="h-l" style={{position:'relative',marginBottom:10}}>Ready to invest with clarity?</h2>
             <p className="body-l" style={{position:'relative',maxWidth:400,margin:'0 auto 24px'}}>Live data. Real insights. No fake numbers.</p>
@@ -172,8 +206,9 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* FOOTER */}
       <footer style={{borderTop:'1px solid var(--b0)',padding:'32px 0'}}>
-        <div className="container" style={{maxWidth:1120,margin:'0 auto',padding:'0 24px',display:'flex',justifyContent:'space-between',flexWrap:'wrap',gap:8}}>
+        <div className="lp-container" style={{display:'flex',justifyContent:'space-between',flexWrap:'wrap',gap:8}}>
           <span className="caption">© 2025 Indx</span>
           <span className="caption">Built in India · Not SEBI-registered advice</span>
         </div>
