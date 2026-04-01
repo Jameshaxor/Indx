@@ -39,7 +39,6 @@ export default function AuthPage() {
 
     setLoading(true);
     try {
-      // Dynamic import to avoid build-time issues
       const {
         createUserWithEmailAndPassword,
         signInWithEmailAndPassword,
@@ -70,12 +69,9 @@ export default function AuthPage() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Left Panel */}
-      <div style={{
-        flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center',
-        padding: '40px 60px', background: 'var(--bg0)'
-      }}>
+    <div className="auth-layout">
+      {/* Left Panel - Hidden on mobile via CSS */}
+      <div className="auth-left">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 40 }}>
           <div style={{
             width: 36, height: 36, borderRadius: 10,
@@ -107,11 +103,19 @@ export default function AuthPage() {
         ))}
       </div>
 
-      {/* Right Panel */}
-      <div style={{
-        width: 420, display: 'flex', flexDirection: 'column', justifyContent: 'center',
-        padding: '40px 40px', background: 'var(--bg1)', borderLeft: '1px solid var(--b0)'
-      }}>
+      {/* Right Panel - Full width on mobile */}
+      <div className="auth-right">
+        {/* Logo on mobile only */}
+        <div className="auth-mobile-logo">
+          <div style={{
+            width: 36, height: 36, borderRadius: 10,
+            background: 'linear-gradient(135deg,#a78bfa,#7c3aed)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 900, fontSize: 16, color: '#fff'
+          }}>IX</div>
+          <span style={{ fontWeight: 800, fontSize: 18 }}>Indx</span>
+        </div>
+
         <button onClick={() => router.push('/')}
           style={{ background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: 12, marginBottom: 20, textAlign: 'left' }}>
           ← Back
@@ -124,6 +128,7 @@ export default function AuthPage() {
           {isSignUp ? 'Start your investing journey.' : 'Sign in to Indx.'}
         </p>
 
+        {/* Google Button */}
         <button onClick={handleGoogle} disabled={loading}
           style={{
             width: '100%', padding: '12px', borderRadius: 10, border: '1px solid var(--b0)',
@@ -134,11 +139,13 @@ export default function AuthPage() {
           <span style={{ fontSize: 18 }}>G</span> Continue with Google
         </button>
 
+        {/* Divider */}
         <div style={{ textAlign: 'center', color: 'var(--t3)', fontSize: 12, marginBottom: 20, position: 'relative' }}>
           <span style={{ background: 'var(--bg1)', padding: '0 12px', position: 'relative', zIndex: 1 }}>or email</span>
           <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: 'var(--b0)' }} />
         </div>
 
+        {/* Error */}
         {error && (
           <div style={{
             padding: '10px 14px', borderRadius: 8, marginBottom: 14,
@@ -147,6 +154,7 @@ export default function AuthPage() {
           }}>{error}</div>
         )}
 
+        {/* Form */}
         <form onSubmit={handleEmail}>
           {isSignUp && (
             <div style={{ marginBottom: 14 }}>
