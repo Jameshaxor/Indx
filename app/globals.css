@@ -135,3 +135,123 @@ a{color:inherit;text-decoration:none}button{font-family:inherit;cursor:pointer}
 
 @media(max-width:900px){.hide-m{display:none!important}}
 @media(max-width:640px){.container{padding:0 16px}}
+
+/* ========== MOBILE RESPONSIVE ========== */
+.auth-layout {
+  display: flex;
+  min-height: 100vh;
+}
+.auth-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 60px;
+  background: var(--bg0);
+}
+.auth-right {
+  width: 420px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px;
+  background: var(--bg1);
+  border-left: 1px solid var(--b0);
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  color: var(--t1);
+}
+
+.dash-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  transition: transform .3s ease;
+}
+
+@media (max-width: 868px) {
+  /* Auth page: hide left panel, full width form */
+  .auth-left { display: none !important; }
+  .auth-right {
+    width: 100% !important;
+    border-left: none !important;
+    padding: 30px 20px !important;
+  }
+
+  /* Sidebar: overlay on mobile */
+  .dash-sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 20px rgba(0,0,0,.3);
+  }
+  .dash-sidebar.open {
+    transform: translateX(0);
+  }
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 999;
+  }
+  .sidebar-overlay.open {
+    display: block;
+  }
+  .hamburger {
+    display: block;
+  }
+
+  /* Grids: single column */
+  .stagger,
+  [style*="grid-template-columns: 1fr 1fr 1fr"],
+  [style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Dashboard cards grid */
+  [style*="repeat(auto-fill"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Main content padding */
+  main {
+    padding: 12px !important;
+  }
+
+  /* Tables scroll */
+  .dtable { font-size: 11px; }
+
+  /* Topbar ticker: hide on mobile */
+  .ticker-bar { display: none !important; }
+
+  /* Page title */
+  h2 { font-size: 18px !important; }
+}
+
+@media (max-width: 480px) {
+  .auth-right {
+    padding: 24px 16px !important;
+  }
+  .card {
+    padding: 12px !important;
+  }
+  .hm {
+    padding: 6px !important;
+  }
+  h2 { font-size: 16px !important; }
+}
