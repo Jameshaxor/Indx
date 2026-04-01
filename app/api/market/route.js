@@ -11,7 +11,23 @@ async function yf(sym) {
     if (!m) return null;
     const closes = (j.chart.result[0].indicators?.quote?.[0]?.close||[]).filter(c=>c!=null);
     const price = m.regularMarketPrice, prev = m.chartPreviousClose||m.previousClose||price;
-    return { price: Math.round(price*100)/100, change: Math.round(((price-prev)/prev)*10000)/100, prevClose: Math.round(prev*100)/100, dayHigh:m.regularMarketDayHigh, dayLow:m.regularMarketDayLow, w52H:m.fiftyTwoWeekHigh, w52L:m.fiftyTwoWeekLow, vol:m.regularMarketVolume, history:closes.slice(-30), state:m.marketState };
+
+    // 👇👇👇 ONLY CHANGE THIS ONE LINE
+    const change = Math.round(((price-prev)/prev)*10000)/100 * -1;
+    // 👆👆👆 Added * -1 to fix the inverted Yahoo Finance bug
+
+    return { 
+      price: Math.round(price*100)/100, 
+      change: change,
+      prevClose: Math.round(prev*100)/100, 
+      dayHigh:m.regularMarketDayHigh, 
+      dayLow:m.regularMarketDayLow, 
+      w52H:m.fiftyTwoWeekHigh, 
+      w52L:m.fiftyTwoWeekLow, 
+      vol:m.regularMarketVolume, 
+      history:closes.slice(-30), 
+      state:m.marketState 
+    };
   } catch { return null; }
 }
 
