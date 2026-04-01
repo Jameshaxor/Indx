@@ -325,3 +325,45 @@ a{color:inherit;text-decoration:none}button{font-family:inherit;cursor:pointer}
   .lp-stats-grid { gap: 12px; }
   .h-xl { font-size: 24px !important; }
 }
+
+/* ========== DASHBOARD RESPONSIVE ========== */
+.dash-index-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+.dash-three-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+.dash-sector-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.dash-news-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (max-width: 868px) {
+  .dash-three-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .dash-index-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .dash-index-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .dash-sector-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
