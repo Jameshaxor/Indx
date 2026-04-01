@@ -49,6 +49,7 @@ export default function AuthPage() {
       if (isSignUp) {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(cred.user, { displayName: name });
+        await cred.user.getIdToken(true);
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
