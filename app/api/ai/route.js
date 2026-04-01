@@ -7,7 +7,7 @@ export async function POST(req) {
     if (!key) return NextResponse.json({ error:'GEMINI_API_KEY not set' }, { status:500 });
     const { marketData, portfolio } = await req.json();
     const genAI = new GoogleGenerativeAI(key);
-    const model = genAI.getGenerativeModel({ model:'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     let ctx = 'No live data.';
     if (marketData) {
