@@ -2,33 +2,107 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { initials } from '@/lib/utils';
 
 const nav = [
-  { s:'Overview', items:[{h:'/dashboard',i:'📊',l:'Dashboard'},{h:'/dashboard/markets',i:'📈',l:'Markets'}] },
-  { s:'Investing', items:[{h:'/dashboard/portfolio',i:'💼',l:'Portfolio'},{h:'/dashboard/watchlist',i:'⭐',l:'Watchlist'},{h:'/dashboard/funds',i:'🏦',l:'Funds'}] },
-  { s:'Intelligence', items:[{h:'/dashboard/insights',i:'🤖',l:'AI Insights'},{h:'/dashboard/tax',i:'🧾',l:'Tax Planner'}] },
-  { s:'Tools', items:[{h:'/dashboard/calculator',i:'🧮',l:'Calculator'},{h:'/dashboard/settings',i:'⚙️',l:'Settings'}] },
+  { label: 'OVERVIEW' },
+  { href: '/dashboard', icon: '📊', name: 'Dashboard' },
+  { href: '/dashboard/markets', icon: '📈', name: 'Markets' },
+  { label: 'INVESTING' },
+  { href: '/dashboard/portfolio', icon: '💼', name: 'Portfolio' },
+  { href: '/dashboard/watchlist', icon: '⭐', name: 'Watchlist' },
+  { href: '/dashboard/funds', icon: '🏦', name: 'Funds' },
+  { label: 'INTELLIGENCE' },
+  { href: '/dashboard/insights', icon: '🤖', name: 'AI Insights' },
+  { href: '/dashboard/tax', icon: '📋', name: 'Tax Planner' },
+  { label: 'TOOLS' },
+  { href: '/dashboard/calculator', icon: '🧮', name: 'Calculator' },
+  { href: '/dashboard/settings', icon: '⚙️', name: 'Settings' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ open, onClose }) {
   const path = usePathname();
   const { user, logout } = useAuth();
+
+  const displayName = user?.displayName || user?.email?.split('@')[0] || 'User';
+
   return (
-    <aside className="dash-side">
-      <div style={{padding:'14px 14px 12px',display:'flex',alignItems:'center',gap:8,borderBottom:'1px solid var(--b0)'}}>
-        <div className="nav-mark" style={{width:28,height:28,fontSize:11,borderRadius:6}}>IX</div>
-        <div><div className="gradient-text" style={{fontSize:13,fontWeight:700,lineHeight:1}}>Indx</div><div style={{fontSize:8,color:'var(--t4)',letterSpacing:1.5,textTransform:'uppercase',marginTop:1}}>Market Intel</div></div>
-      </div>
-      <nav style={{flex:1,overflowY:'auto',padding:'6px 8px'}}>
-        {nav.map(s=><div key={s.s}><div className="side-sec">{s.s}</div>
-          {s.items.map(it=><Link key={it.h} href={it.h} className={`side-link ${path===it.h?'on':''}`}><span style={{fontSize:14,width:20,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{it.i}</span>{it.l}</Link>)}
-        </div>)}
-      </nav>
-      <div onClick={logout} style={{padding:'10px 12px',borderTop:'1px solid var(--b0)',display:'flex',alignItems:'center',gap:8,cursor:'pointer',transition:'background .15s'}} onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.02)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-        <div style={{width:28,height:28,borderRadius:7,background:'linear-gradient(135deg,var(--accent),#ec4899)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:10,color:'#fff',flexShrink:0}}>{user?initials(user.name):'??'}</div>
-        <div style={{flex:1,minWidth:0}}><div style={{fontSize:11,fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{user?.name||'User'}</div><div style={{fontSize:9,color:'var(--t4)'}}>Sign out →</div></div>
-      </div>
-    </aside>
+    <>
+      {/* Mobile overlay backdrop */}
+      <div
+        className={`sidebar-overlay ${open ? 'open' : ''}`}
+        onClick={onClose}
+      />
+
+      <aside className={`dash-sidebar ${open ? 'open' : ''}`} style={{
+        background: 'var(--bg1)', borderRight: '1px solid var(--b0)',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden'
+      }}>
+        {/* Logo */}
+        <div style={{ padding: '18px 18px 10px', display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 10,
+              background: 'linear-gradient(135deg,#a78bfa,#7c3aed)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 900, fontSize: 14, color: '#fff'
+            }}>IX</div>
+            <div>
+              <div style={{ fontWeight: 900, fontSize: 16 }}>Indx</div>
+              <div style={{ fontSize: 8, color: 'var(--t3)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Market Intel</div>
+            </div>
+          </div>
+          {/* Close button on mobile */}
+          <button
+            className="hamburger"
+            onClick={onClose}
+            style={{ fontSize: 18 }}
+          >✕</button>
+        </div>
+
+        {/* Nav */}
+        <nav style={{ flex: 1, overflowY: 'auto', padding: '6px 10px' }}>
+          {nav.map((item, i) =>
+            item.label ? (
+              <div key={i} style={{ fontSize: 9, fontWeight: 700, color: 'var(--t3)', letterSpacing: 1.2, padding: '14px 8px 4px', textTransform: 'uppercase' }}>
+                {item.label}
+              </div>
+            ) : (
+              <Link key={i} href={item.href} onClick={onClose} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px',
+                borderRadius: 9, fontSize: 13, fontWeight: path === item.href ? 700 : 500,
+                background: path === item.href ? 'var(--accent)' : 'transparent',
+                color: path === item.href ? '#fff' : 'var(--t2)',
+                marginBottom: 2, textDecoration: 'none',
+                transition: 'all .15s'
+              }}>
+                <span style={{ fontSize: 15 }}>{item.icon}</span>{item.name}
+              </Link>
+            )
+          )}
+        </nav>
+
+        {/* User */}
+        <div style={{ padding: 14, borderTop: '1px solid var(--b0)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: '50%',
+              background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 12, fontWeight: 800, color: '#fff'
+            }}>
+              {displayName.charAt(0).toUpperCase()}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {displayName}
+              </div>
+              <button onClick={logout} style={{
+                background: 'none', border: 'none', color: 'var(--t3)',
+                fontSize: 10, cursor: 'pointer', padding: 0
+              }}>Sign out →</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }
